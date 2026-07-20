@@ -2,6 +2,6 @@ flask
 gunicorn
 requests
 firebase-admin
-scikit-learn
+scikit-learn==1.6.1
 numpy
 pandas
