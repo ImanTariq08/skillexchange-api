@@ -15,35 +15,27 @@ if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-# Load sentiment pipeline
-  # Hugging Face API configuration
+# Sentiment via Hugging Face Inference API (no local model, saves memory)
 HF_TOKEN = os.environ.get('HF_TOKEN')
 API_URL = "https://api-inference.huggingface.co/models/cardiffnlp/twitter-roberta-base-sentiment-latest"
 headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 
 def get_bert_sentiment_score(comment):
     try:
-        response = requests.post(
-            API_URL,
-            headers=headers,
-            json={"inputs": comment[:512]}
-        )
-
+        response = requests.post(API_URL, headers=headers, json={"inputs": comment[:512]})
         result = response.json()[0]
-        top = max(result, key=lambda x: x["score"])
-
-        label = top["label"].lower()
-        score = top["score"]
-
-        if "positive" in label:
+        top = max(result, key=lambda x: x['score'])
+        label = top['label'].lower()
+        score = top['score']
+        if 'positive' in label:
             return score
-        elif "negative" in label:
+        elif 'negative' in label:
             return -score
         else:
             return 0.0
-    except Exception:
+    except:
         return 0.0
-        
+
 # Load trained models
 with open('recommendation_model.pkl', 'rb') as f:
     model_data = pickle.load(f)
