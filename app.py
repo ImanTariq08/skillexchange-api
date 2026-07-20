@@ -1,11 +1,11 @@
 import pickle
 import numpy as np
 from flask import Flask, request, jsonify
-from transformers import pipeline
 import firebase_admin
 from firebase_admin import credentials, firestore
 import json
 import os
+import requests
 
 # Connect to Firestore using credentials from Render environment variable
 firebase_creds_json = os.environ.get('FIREBASE_CREDENTIALS')
@@ -16,10 +16,25 @@ if not firebase_admin._apps:
 db = firestore.client()
 
 # Load sentiment pipeline
-sentiment_pipeline = pipeline(
-    "sentiment-analysis",
-    model="cardiffnlp/twitter-roberta-base-sentiment-latest"
-)
+   HF_TOKEN = os.environ.get('HF_TOKEN')
+   API_URL = "https://api-inference.huggingface.co/models/cardiffnlp/twitter-roberta-base-sentiment-latest"
+   headers = {"Authorization": f"Bearer {HF_TOKEN}"}
+
+   def get_bert_sentiment_score(comment):
+       try:
+           response = requests.post(API_URL, headers=headers, json={"inputs": comment[:512]})
+           result = response.json()[0]
+           top = max(result, key=lambda x: x['score'])
+           label = top['label'].lower()
+           score = top['score']
+           if 'positive' in label:
+               return score
+           elif 'negative' in label:
+               return -score
+           else:
+               return 0.0
+       except:
+           return 0.0
 
 # Load trained models
 with open('recommendation_model.pkl', 'rb') as f:
