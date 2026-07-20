@@ -1,7 +1,7 @@
 flask
 gunicorn
-transformers
-torch
+requests
+firebase-admin
 scikit-learn
 numpy
 pandas
